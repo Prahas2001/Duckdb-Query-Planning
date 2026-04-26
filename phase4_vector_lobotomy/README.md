@@ -1,4 +1,4 @@
-# Phase 4 - The Vector Lobotomy
+# Phase 4 — The Vector Lobotomy
 
 ## Objective
 Empirically prove the necessity of vectorized execution by modifying DuckDB's core vector size constant at the C++ source level and recompiling the engine.
