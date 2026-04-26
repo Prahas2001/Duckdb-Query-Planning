@@ -1,4 +1,4 @@
-# DuckDB — Query Planning & Systems Analysis
+# DuckDB - Query Planning & Systems Analysis
 ### Big Data Engineering | Course Project
 
 A five-phase empirical investigation of DuckDB's internal architecture. This project moves beyond basic querying to reverse-engineer the execution path, identify core design decisions, and **empirically prove** their value through source-code-level modification, controlled benchmarks, and deliberate failure injection.
