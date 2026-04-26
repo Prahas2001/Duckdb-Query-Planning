@@ -8,7 +8,7 @@ A five-phase empirical investigation of DuckDB's internal architecture. This pro
 ## Repository Structure
 
 ```
-duckdb-systems-analysis/
+duckdb-query-planning/
 │
 ├── README.md
 ├── requirements.txt
