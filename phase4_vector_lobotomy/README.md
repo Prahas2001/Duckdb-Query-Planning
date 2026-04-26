@@ -1,4 +1,4 @@
-# Phase 4 — The Vector Lobotomy
+# Phase 4 - The Vector Lobotomy
 
 ## Objective
 Empirically prove the necessity of vectorized execution by modifying DuckDB's core vector size constant at the C++ source level and recompiling the engine.
@@ -55,7 +55,7 @@ nano src/include/duckdb/common/vector_size.hpp
 git diff src/include/duckdb/common/vector_size.hpp
 ```
 
-**4. Compile (Windows - Developer Command Prompt)**
+**4. Compile (Windows — Developer Command Prompt)**
 ```bash
 mkdir build
 cd build
