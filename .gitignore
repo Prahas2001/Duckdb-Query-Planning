@@ -1,0 +1,25 @@
+# Dataset — too large for GitHub
+flights.csv
+flights.duckdb
+flights_sqlite.db
+
+# DuckDB source build artifacts — too large for GitHub
+duckdb/build/
+duckdb/*.patch
+
+# Python
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+*.egg-info/
+dist/
+build/
+.env
+venv/
+
+# Spill test directories
+duckdb_spill_test/
+
+# OS
+.DS_Store
+Thumbs.db
