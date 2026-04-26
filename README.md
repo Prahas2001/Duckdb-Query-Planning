@@ -44,7 +44,7 @@ All experiments use the **US Airline On-Time Performance** dataset (`flights.csv
 
 ---
 
-## Phase 1 — Execution Path Mapping
+## Phase 1 - Execution Path Mapping
 
 **Notebook:** `phase1_execution_path/Duckdb_Phase_1.ipynb`
 
@@ -61,7 +61,7 @@ Traced how DuckDB processes a raw SQL query down to the physical execution layer
 
 ---
 
-## Phase 2 — Core Design Decisions
+## Phase 2 - Core Design Decisions
 
 **Notebook:** `phase2_design_decisions/Duckdb_Phase_2.ipynb`
 
@@ -69,15 +69,15 @@ Identified and empirically probed three architectural pillars. For each: where i
 
 ---
 
-### 2A — PostgreSQL Parser
+### 2A - PostgreSQL Parser
 
 **Code location:** DuckDB embeds the PostgreSQL parser as a submodule under `third_party/libpg_query/`. It is invoked as the first stage of every query before any catalog or data access occurs.
 
-**Problem it solves:** Writing a robust, production-grade SQL parser from scratch is a multi-year effort. By reusing PostgreSQL's battle-tested parser, DuckDB gets full SQL syntax validation — including deeply nested expressions, CTEs, and window functions — for free.
+**Problem it solves:** Writing a robust, production-grade SQL parser from scratch is a multi-year effort. By reusing PostgreSQL's battle-tested parser, DuckDB gets full SQL syntax validation - including deeply nested expressions, CTEs, and window functions - for free.
 
 **Tradeoff:** DuckDB inherits PostgreSQL's SQL dialect and cannot diverge from it without forking and maintaining the parser independently. Any syntax that PostgreSQL does not support, DuckDB cannot support through this layer alone.
 
-**Empirical proof — three exception types proving three ordered pipeline stages:**
+**Empirical proof - three exception types proving three ordered pipeline stages:**
 
 ```
 ParserException  → "SELCT" syntax error       (Stage 1: caught before catalog lookup)
@@ -85,11 +85,11 @@ CatalogException → nonexistent_table          (Stage 2: parser passed, table c
 BinderException  → "DEP_DELAY" column missing (Stage 3: table found, column resolved)
 ```
 
-Three structurally similar queries, three distinct exception classes — proving the pipeline has independent, ordered validation stages. The binder also suggested `DEPARTURE_DELAY` as a candidate column, showing active metadata consultation.
+Three structurally similar queries, three distinct exception classes - proving the pipeline has independent, ordered validation stages. The binder also suggested `DEPARTURE_DELAY` as a candidate column, showing active metadata consultation.
 
 ---
 
-### 2B — Vectorized Execution (Morsel-Driven)
+### 2B - Vectorized Execution (Morsel-Driven)
 
 **Code location:** `src/include/duckdb/common/vector_size.hpp` defines `STANDARD_VECTOR_SIZE 2048U` — the number of rows processed per execution chunk. This is a compile-time constant, not a runtime setting.
 
@@ -97,19 +97,19 @@ Three structurally similar queries, three distinct exception classes — proving
 
 **Tradeoff:** Fixed-width columnar vectors require data to be laid out contiguously in memory. This is ideal for analytical (OLAP) workloads with uniform data types, but is a poor fit for highly variable, nested, or semi-structured data where row layouts differ significantly between records.
 
-**Empirical proof:** Attempting to vary `STANDARD_VECTOR_SIZE` via the Python API's `SET` pragma produced no measurable effect — confirming it is a compile-time constant. The only valid test was source-level modification (Phase 4), which produced a **2.92× CPU overhead** when the vector size was reduced from 2048 to 2.
+**Empirical proof:** Attempting to vary `STANDARD_VECTOR_SIZE` via the Python API's `SET` pragma produced no measurable effect - confirming it is a compile-time constant. The only valid test was source-level modification (Phase 4), which produced a **2.92× CPU overhead** when the vector size was reduced from 2048 to 2.
 
 ---
 
-### 2C — Buffer Manager (Out-of-Core Spill)
+### 2C - Buffer Manager (Out-of-Core Spill)
 
 **Code location:** DuckDB's buffer manager is implemented in `src/storage/buffer/` and `src/storage/buffer_manager.cpp`. It intercepts memory allocations during query execution and automatically redirects overflow to disk when the configured `memory_limit` is exceeded.
 
 **Problem it solves:** Analytical queries over large datasets frequently require intermediate state (e.g., hash tables for GROUP BY, sort buffers for ORDER BY) that exceeds available RAM. Without a buffer manager, these queries would crash. DuckDB's buffer manager transparently spills these intermediate states to `.tmp` files, allowing queries to complete on datasets larger than physical memory.
 
-**Tradeoff:** Spilling to disk introduces significant latency — disk I/O is orders of magnitude slower than RAM. Empirically measured at **2.66–3.69× overhead** depending on OS I/O scheduling. If both RAM and disk are exhausted simultaneously, the buffer manager throws an `OutOfMemoryException` and aborts — there is no third tier of storage to fall back to.
+**Tradeoff:** Spilling to disk introduces significant latency - disk I/O is orders of magnitude slower than RAM. Empirically measured at **2.66–3.69× overhead** depending on OS I/O scheduling. If both RAM and disk are exhausted simultaneously, the buffer manager throws an `OutOfMemoryException` and aborts — there is no third tier of storage to fall back to.
 
-**Empirical proof — memory constrained to 300MB on 5.8M row aggregation:**
+**Empirical proof - memory constrained to 300MB on 5.8M row aggregation:**
 
 | Condition | Time | Spill volume |
 |---|---|---|
@@ -133,7 +133,7 @@ On Windows, `SET temp_directory` was silently overridden — DuckDB used `C:\Use
 
 ---
 
-## Phase 3 — Big Data Pipeline Context
+## Phase 3 - Big Data Pipeline Context
 
 **Notebook:** `phase3_benchmarking/Duckdb_Phase_3.ipynb`
 
@@ -146,11 +146,11 @@ Same aggregation query on the same 5.8M row dataset across three engines.
 | 3B — Three-Engine Benchmark | DuckDB (CSV) vs SQLite (pre-loaded) vs Pandas (CSV) | Initial timing with methodological anomaly identified |
 | 3C — Fair Comparison | DuckDB pre-loaded `.duckdb` vs SQLite pre-loaded `.db` | Pure execution model comparison on equal footing |
 
-### 3A — Engine Setup
+### 3A - Engine Setup
 
-SQLite was chosen as the row-based comparison engine. To eliminate CSV parsing from its benchmark time, all 5,819,079 rows were pre-loaded into a binary `.db` file as a one-time setup step. A DB rebuild was required after an initial empty-DB error was detected (3A Fix) — this is documented transparently in the notebook.
+SQLite was chosen as the row-based comparison engine. To eliminate CSV parsing from its benchmark time, all 5,819,079 rows were pre-loaded into a binary `.db` file as a one-time setup step. A DB rebuild was required after an initial empty-DB error was detected (3A Fix) - this is documented transparently in the notebook.
 
-### 3B — Three-Engine Benchmark (Initial Run)
+### 3B - Three-Engine Benchmark (Initial Run)
 
 | Engine | Time | vs DuckDB | Architecture |
 |---|---|---|---|
@@ -160,7 +160,7 @@ SQLite was chosen as the row-based comparison engine. To eliminate CSV parsing f
 
 **Anomaly identified:** SQLite appeared faster than DuckDB. This was flagged as a structural confound — SQLite skipped CSV parsing (data was pre-loaded), while DuckDB parsed raw CSV on every run. The comparison was not on equal footing.
 
-### 3C — Fair Comparison (DuckDB Pre-loaded vs SQLite Pre-loaded)
+### 3C - Fair Comparison (DuckDB Pre-loaded vs SQLite Pre-loaded)
 
 To isolate pure execution model performance, DuckDB was benchmarked against a pre-loaded `.duckdb` file — eliminating CSV parse cost from both engines.
 
@@ -169,7 +169,7 @@ To isolate pure execution model performance, DuckDB was benchmarked against a pr
 | **DuckDB** (pre-loaded) | **0.056s** | 1.0× baseline | Pure columnar vectorized execution |
 | SQLite (pre-loaded) | 2.186s | **39.3× slower** | Pure row-based scan execution |
 
-**Key finding:** On equal footing, DuckDB is **39.3× faster** than SQLite. The gap is entirely attributable to execution model — SQLite performs a full row scan reading all 31 columns per row to retrieve 2, while DuckDB's columnar storage reads only the projected columns (`AIRLINE`, `DEPARTURE_DELAY`) in SIMD chunks.
+**Key finding:** On equal footing, DuckDB is **39.3× faster** than SQLite. The gap is entirely attributable to execution model - SQLite performs a full row scan reading all 31 columns per row to retrieve 2, while DuckDB's columnar storage reads only the projected columns (`AIRLINE`, `DEPARTURE_DELAY`) in SIMD chunks.
 
 ### Why Pandas is 32× Slower Than DuckDB (from CSV)
 
@@ -181,7 +181,7 @@ DuckDB projects only the required columns during streaming parse — never mater
 
 ---
 
-## Phase 4 — The Vector Lobotomy *(Source-Level Experiment)*
+## Phase 4 - The Vector Lobotomy *(Source-Level Experiment)*
 
 **Directory:** `phase4_vector_lobotomy/`
 
@@ -211,7 +211,7 @@ This forces the execution engine to process data in 2-row chunks instead of 2048
 
 ### Interpretation
 
-The wall-clock doubling understates the damage. The critical metric is **CPU user time** — 19.875s vs 6.81s proves the CPU spent extra cycles on function call overhead and cache misses across 2.9 million tiny 2-row chunks, rather than mathematical aggregations. The appearance of `sys` time (0 → 0.75s) reveals kernel-level memory management calls that never occurred with the default 2048-row chunks.
+The wall-clock doubling understates the damage. The critical metric is **CPU user time** - 19.875s vs 6.81s proves the CPU spent extra cycles on function call overhead and cache misses across 2.9 million tiny 2-row chunks, rather than mathematical aggregations. The appearance of `sys` time (0 → 0.75s) reveals kernel-level memory management calls that never occurred with the default 2048-row chunks.
 
 ### Reproduction Steps
 
@@ -219,13 +219,13 @@ See `phase4_vector_lobotomy/README.md` for full steps. Requires CMake 3.x and MS
 
 ---
 
-## Phase 5 — Failure Analysis
+## Phase 5 - Failure Analysis
 
 **Notebook:** `phase5_failure_analysis/Duckdb_Phase_5.ipynb`
 
 Three distinct failure modes empirically demonstrated.
 
-### 5A — OOM Hard Abort (memory_limit = 100MB)
+### 5A - OOM Hard Abort (memory_limit = 100MB)
 
 ```
 duckdb.OutOfMemoryException:
@@ -234,7 +234,7 @@ Out of Memory Error: could not allocate block of size 30.5 MiB (66.9 MiB/95.3 Mi
 
 The buffer manager attempted to manage the query, calculated exactly how much memory was available, and threw a clean exception when a required allocation was impossible. **No partial result, no recovery.**
 
-### 5B — OOM Graceful Spill (memory_limit = 300MB)
+### 5B - OOM Graceful Spill (memory_limit = 300MB)
 
 | Run | Time |
 |---|---|
@@ -244,9 +244,9 @@ The buffer manager attempted to manage the query, calculated exactly how much me
 | Spill run 3 | 4.765s |
 | **Average overhead** | **2.88×** |
 
-138 MB spilled to disk. Query completed successfully. Variance across runs (1.515s range) is attributable to Windows I/O scheduling — disk spill benchmarks on a non-real-time OS are inherently noisy.
+138 MB spilled to disk. Query completed successfully. Variance across runs (1.515s range) is attributable to Windows I/O scheduling - disk spill benchmarks on a non-real-time OS are inherently noisy.
 
-### 5C — Host Process Interference (In-Process Crash)
+### 5C - Host Process Interference (In-Process Crash)
 
 ```python
 # Query running in background thread

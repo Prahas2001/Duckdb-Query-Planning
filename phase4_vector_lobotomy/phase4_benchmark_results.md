@@ -1,7 +1,7 @@
 # Phase 4 — Benchmark Results
 
 ## Experiment Setup
-- **Dataset:** flights.csv — US Airline On-Time Performance 2015
+- **Dataset:** flights.csv - US Airline On-Time Performance 2015
 - **Rows:** 5,819,079
 - **Query:** Aggregation of delayed flights (DEPARTURE_DELAY > 15) grouped by AIRLINE
 - **Hardware:** Windows 11, x86-64, MSVC 19.50
@@ -54,6 +54,6 @@ Same result set produced (correctness preserved).
 
 ## Key Observation
 
-The results are **identical** — both engines produce the same 14 rows with the same values. The modification degrades performance without compromising correctness. This confirms the vector size controls execution efficiency, not execution logic.
+The results are **identical** - both engines produce the same 14 rows with the same values. The modification degrades performance without compromising correctness. This confirms the vector size controls execution efficiency, not execution logic.
 
 The 2.92× CPU overhead with only 2.18× wall-clock slowdown indicates the additional CPU work is partially masked by I/O wait time. In a memory-resident scenario (pre-loaded data), the CPU overhead ratio would be even more pronounced.

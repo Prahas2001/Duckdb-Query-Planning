@@ -4,7 +4,7 @@
 Empirically prove the necessity of vectorized execution by modifying DuckDB's core vector size constant at the C++ source level and recompiling the engine.
 
 ## Why Source-Level Modification Was Necessary
-Phase 2 (Experiment 2B) demonstrated that `STANDARD_VECTOR_SIZE` cannot be changed at runtime via the Python API's `SET` pragma — it is a compile-time constant baked into the binary. The only valid way to test this architectural pillar was to modify and recompile the C++ source.
+Phase 2 (Experiment 2B) demonstrated that `STANDARD_VECTOR_SIZE` cannot be changed at runtime via the Python API's `SET` pragma - it is a compile-time constant baked into the binary. The only valid way to test this architectural pillar was to modify and recompile the C++ source.
 
 ## The Modification
 
@@ -55,7 +55,7 @@ nano src/include/duckdb/common/vector_size.hpp
 git diff src/include/duckdb/common/vector_size.hpp
 ```
 
-**4. Compile (Windows — Developer Command Prompt)**
+**4. Compile (Windows - Developer Command Prompt)**
 ```bash
 mkdir build
 cd build
@@ -112,4 +112,4 @@ The wall-clock doubling (2.18×) understates the actual damage. The CPU user tim
 The appearance of sys time (0.00s → 0.75s) is an additional finding: with 2.9 million tiny chunks, the engine began making OS-level kernel calls for memory management that never occurred with 2048-row chunks. This overhead does not exist in the default engine.
 
 ### Connection to Phase 2
-This experiment directly validates what Phase 2 (Experiment 2B) hypothesised — that `STANDARD_VECTOR_SIZE` is a compile-time constant controlling SIMD batch size. The Python API cannot expose this control. Phase 4 is the only empirical proof of this pillar's value.
+This experiment directly validates what Phase 2 (Experiment 2B) hypothesised - that `STANDARD_VECTOR_SIZE` is a compile-time constant controlling SIMD batch size. The Python API cannot expose this control. Phase 4 is the only empirical proof of this pillar's value.
